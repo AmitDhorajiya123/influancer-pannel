@@ -18,7 +18,9 @@ import {
   fetchDashboard,
   fetchOrders,
   fetchPayouts,
-  requestPayout
+  fetchMappedUsers,
+  requestPayout,
+  saveBankDetails
 } from './utils/api';
 
 // Core Layout Components
@@ -36,6 +38,7 @@ import RecentOrdersTable from './components/RecentOrdersTable';
 import ReferralLinksView from './components/views/ReferralLinksView';
 import OrdersView from './components/views/OrdersView';
 import PayoutsView from './components/views/PayoutsView';
+import CustomersView from './components/views/CustomersView';
 
 import './App.css';
 
@@ -73,6 +76,9 @@ export default function App() {
   const [orders, setOrders] = useState(REFERRAL_ORDERS);
   const [recentOrders, setRecentOrders] = useState(REFERRAL_ORDERS);
   const [payouts, setPayouts] = useState(INITIAL_PAYOUTS);
+  const [bankDetails, setBankDetails] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [customersLoading, setCustomersLoading] = useState(false);
 
   // Modal & Toast State
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
@@ -105,6 +111,7 @@ export default function App() {
     setOrders([]);
     setRecentOrders([]);
     setPayouts([]);
+    setCustomers([]);
     if (message) showToast(message, 'error');
     navigate('/influancer/login', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,7 +119,10 @@ export default function App() {
 
   // Load all live data from the backend
   const loadPortalData = useCallback(async () => {
-    const [dash, ord, pay] = await Promise.all([fetchDashboard(), fetchOrders(), fetchPayouts()]);
+    setCustomersLoading(true);
+    const [dash, ord, pay, mapped] = await Promise.all([fetchDashboard(), fetchOrders(), fetchPayouts(), fetchMappedUsers()]);
+    setCustomersLoading(false);
+    if (mapped?.status) setCustomers(mapped.users || []);
 
     const failed = [dash, ord, pay].find(r => r && (r.unauthorized || r.status === false));
     if (failed?.unauthorized) {
@@ -134,7 +144,10 @@ export default function App() {
       }
     }
     if (ord?.status) setOrders(ord.orders || []);
-    if (pay?.status) setPayouts(pay.payouts || []);
+    if (pay?.status) {
+      setPayouts(pay.payouts || []);
+      setBankDetails(pay.bank_details || null);
+    }
 
     if (failed && !failed.unauthorized) {
       showToast(failed.message || 'Unable to load portal data.', 'error');
@@ -166,8 +179,22 @@ export default function App() {
   };
 
   // Handle payout submission (real API). Returns the API result to the modal.
-  const handlePayoutSubmit = async ({ amount, method, accountDetails }) => {
-    const res = await requestPayout(amount, method, accountDetails);
+  // Save payout bank account / UPI
+  const handleSaveBankDetails = async (details) => {
+    const res = await saveBankDetails(details);
+    if (res?.unauthorized) {
+      forceLogout(res.message);
+      return res;
+    }
+    if (res?.status) {
+      setBankDetails(res.bank_details || null);
+      showToast('Payout account saved.', 'success');
+    }
+    return res;
+  };
+
+  const handlePayoutSubmit = async ({ amount, method }) => {
+    const res = await requestPayout(amount, method);
     if (res?.unauthorized) {
       forceLogout(res.message);
       return res;
@@ -299,6 +326,19 @@ export default function App() {
                         } 
                       />
                       <Route 
+                        path="customers" 
+                        element={
+                          <CustomersView 
+                            customers={customers}
+                            currency={currency}
+                            referralCode={currentUser?.referral_code}
+                            loading={customersLoading}
+                            onBackToDashboard={() => navigate('/influancer/dashboard')}
+                            showToast={showToast}
+                          />
+                        } 
+                      />
+                      <Route 
                         path="orders" 
                         element={
                           <OrdersView 
@@ -318,6 +358,8 @@ export default function App() {
                             availableBalance={metrics.availablePayout}
                             minPayout={minPayout}
                             payouts={payouts}
+                            bankDetails={bankDetails}
+                            onSaveBankDetails={handleSaveBankDetails}
                             onRequestPayout={() => setPayoutModalOpen(true)}
                             onBackToDashboard={() => navigate('/influancer/dashboard')}
                           />
@@ -335,6 +377,8 @@ export default function App() {
                   onClose={() => setPayoutModalOpen(false)}
                   availableBalance={metrics.availablePayout}
                   minPayout={minPayout}
+                  bankDetails={bankDetails}
+                  onAddBankDetails={() => { setPayoutModalOpen(false); navigate('/influancer/payouts'); }}
                   currency={currency}
                   onSubmitPayout={handlePayoutSubmit}
                 />
@@ -348,6 +392,7 @@ export default function App() {
         <Route path="/dashboard" element={<Navigate to="/influancer/dashboard" replace />} />
         <Route path="/referrals" element={<Navigate to="/influancer/referrals" replace />} />
         <Route path="/orders" element={<Navigate to="/influancer/orders" replace />} />
+        <Route path="/customers" element={<Navigate to="/influancer/customers" replace />} />
         <Route path="/payouts" element={<Navigate to="/influancer/payouts" replace />} />
         <Route path="/settings" element={<Navigate to="/influancer/dashboard" replace />} />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/influancer/dashboard" : "/influancer/login"} replace />} />

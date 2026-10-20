@@ -257,10 +257,20 @@ export function fetchPayouts() {
   return authedRequest('/v1/influencer/payouts');
 }
 
-/** POST /api/v1/influencer/payout-request { amount, method: 'bank'|'upi', account_details } */
-export function requestPayout(amount, method, accountDetails) {
+/** POST /api/v1/influencer/payout-request { amount, method: 'bank'|'upi' } (paid to the saved account) */
+export function requestPayout(amount, method) {
   return authedRequest('/v1/influencer/payout-request', {
     method: 'POST',
-    body: { amount: Number(amount), method, account_details: accountDetails || null }
+    body: { amount: Number(amount), method }
   });
+}
+
+/** GET /api/v1/influencer/bank-details -> { bank_details } */
+export function fetchBankDetails() {
+  return authedRequest('/v1/influencer/bank-details');
+}
+
+/** POST /api/v1/influencer/bank-details { account_holder_name, account_number, confirm_account_number, ifsc, bank_name, upi_id } */
+export function saveBankDetails(details) {
+  return authedRequest('/v1/influencer/bank-details', { method: 'POST', body: details });
 }

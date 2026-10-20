@@ -5,6 +5,7 @@ import {
   Link2, 
   ShoppingBag, 
   CreditCard, 
+  Users,
   LogOut, 
   Zap
 } from 'lucide-react';
@@ -24,6 +25,7 @@ export default function Sidebar({
   const navItems = [
     { id: 'dashboard', path: '/influancer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'referrals', path: '/influancer/referrals', label: 'Referral Links', icon: Link2 },
+    { id: 'customers', path: '/influancer/customers', label: 'Mapped Customers', icon: Users },
     { id: 'orders', path: '/influancer/orders', label: 'Orders & Commission', icon: ShoppingBag },
     { id: 'payouts', path: '/influancer/payouts', label: 'Payouts', icon: CreditCard },
   ];

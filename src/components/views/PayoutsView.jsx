@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowLeft, Wallet, Building2, Zap, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Wallet, Zap } from 'lucide-react';
+import BankDetailsCard from '../BankDetailsCard';
 import { formatCurrency } from '../../utils/formatters';
 import { INITIAL_PAYOUTS } from '../../data/mockData';
 
@@ -9,29 +10,23 @@ export default function PayoutsView({
   payouts = INITIAL_PAYOUTS, 
   onRequestPayout, 
   onBackToDashboard,
-  minPayout = 500
+  minPayout = 500,
+  bankDetails = null,
+  onSaveBankDetails
 }) {
   const statusPill = (status) => {
-    if (status === 'Completed') {
-      return (
-        <span className="status-pill status-completed">
-          <span className="status-dot green-dot" />
-          <span>Paid</span>
-        </span>
-      );
-    }
-    if (status === 'Rejected') {
-      return (
-        <span className="status-pill status-pending">
-          <span className="status-dot slate-dot" />
-          <span>Rejected</span>
-        </span>
-      );
-    }
+    const map = {
+      Completed: ['status-completed', 'green-dot', 'Paid'],
+      Processing: ['status-processing', 'amber-dot', 'Processing'],
+      Requested: ['status-processing', 'amber-dot', 'Requested'],
+      Failed: ['status-pending', 'slate-dot', 'Failed'],
+      Rejected: ['status-pending', 'slate-dot', 'Rejected']
+    };
+    const [cls, dot, label] = map[status] || map.Requested;
     return (
-      <span className="status-pill status-processing">
-        <span className="status-dot amber-dot" />
-        <span>Processing</span>
+      <span className={`status-pill ${cls}`}>
+        <span className={`status-dot ${dot}`} />
+        <span>{label}</span>
       </span>
     );
   };
@@ -80,33 +75,8 @@ export default function PayoutsView({
           </button>
         </div>
 
-        {/* Bank & Payment Information Card */}
-        <div className="payout-summary-card bank-info-card">
-          <div className="summary-card-header">
-            <span className="summary-card-label">HOW PAYOUTS WORK</span>
-            <Building2 size={18} className="text-gold" />
-          </div>
-
-          <div className="bank-details-block">
-            <div className="bank-details-row">
-              <span className="bank-label">1.</span>
-              <strong className="bank-val">Commission is earned when your customer's order is completed.</strong>
-            </div>
-            <div className="bank-details-row">
-              <span className="bank-label">2.</span>
-              <strong className="bank-val">Request a payout with your bank account or UPI ID.</strong>
-            </div>
-            <div className="bank-details-row">
-              <span className="bank-label">3.</span>
-              <strong className="bank-val">Admin transfers the amount and adds the UTR reference here.</strong>
-            </div>
-          </div>
-
-          <div className="account-verified-tag">
-            <ShieldCheck size={14} className="text-green" />
-            <span>Direct Bank & UPI Settlements</span>
-          </div>
-        </div>
+        {/* Payout bank account / UPI */}
+        <BankDetailsCard bankDetails={bankDetails} onSave={onSaveBankDetails} />
       </div>
 
       {/* Payout History Table */}
@@ -169,6 +139,9 @@ export default function PayoutsView({
                     </td>
                     <td>
                       {statusPill(p.status)}
+                      {p.note && (
+                        <div className="order-date-text" style={{ maxWidth: 220, whiteSpace: 'normal' }}>{p.note}</div>
+                      )}
                     </td>
                   </tr>
                 ))

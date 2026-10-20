@@ -17,23 +17,32 @@ export default function PayoutModal({
   availableBalance, 
   currency, 
   onSubmitPayout,
-  minPayout = 500
+  minPayout = 500,
+  bankDetails = null,
+  onAddBankDetails
 }) {
   const [withdrawAmount, setWithdrawAmount] = useState(availableBalance);
   const [method, setMethod] = useState('bank');
-  const [accountDetails, setAccountDetails] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [referenceId, setReferenceId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Reset the amount to the latest balance each time the modal opens
+  const hasBank = Boolean(bankDetails?.has_bank);
+  const hasUpi = Boolean(bankDetails?.has_upi);
+  const bankLabel = hasBank
+    ? `${bankDetails.bank_name ? bankDetails.bank_name + ' ' : ''}${bankDetails.account_number_masked || ''}`
+    : 'Add bank account on the Payouts page';
+  const destinationLabel = method === 'upi' ? (bankDetails?.upi_id || '') : bankLabel;
+
+  // Reset the amount and pick an available method each time the modal opens
   useEffect(() => {
     if (isOpen) {
       setWithdrawAmount(availableBalance);
       setError('');
+      setMethod(hasBank || !hasUpi ? 'bank' : 'upi');
     }
-  }, [isOpen, availableBalance]);
+  }, [isOpen, availableBalance, hasBank, hasUpi]);
 
   if (!isOpen) return null;
 
@@ -47,15 +56,15 @@ export default function PayoutModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (invalidAmount || submitting) return;
-    if (!accountDetails.trim()) {
-      setError(method === 'upi' ? 'Please enter your UPI ID.' : 'Please enter account number, IFSC and account holder name.');
+    if ((method === 'bank' && !hasBank) || (method === 'upi' && !hasUpi)) {
+      setError(method === 'upi' ? 'Please add your UPI ID first.' : 'Please add your bank account first.');
       return;
     }
 
     setSubmitting(true);
     setError('');
     const res = onSubmitPayout
-      ? await onSubmitPayout({ amount: amountNum, method, accountDetails: accountDetails.trim() })
+      ? await onSubmitPayout({ amount: amountNum, method })
       : { status: false, message: 'Payout is not available.' };
     setSubmitting(false);
 
@@ -79,7 +88,6 @@ export default function PayoutModal({
 
   const handleClose = () => {
     setIsSuccess(false);
-    setAccountDetails('');
     setError('');
     onClose();
   };
@@ -119,7 +127,7 @@ export default function PayoutModal({
               </div>
               <div className="receipt-row">
                 <span>Destination:</span>
-                <span>{method === 'bank' ? 'Bank Transfer' : 'UPI'} · {accountDetails}</span>
+                <span>{method === 'bank' ? 'Bank Transfer' : 'UPI'} · {destinationLabel}</span>
               </div>
               <div className="receipt-row">
                 <span>Status:</span>
@@ -197,10 +205,11 @@ export default function PayoutModal({
                     value="bank" 
                     checked={method === 'bank'} 
                     onChange={() => setMethod('bank')}
+                    disabled={!hasBank}
                   />
                   <div className="method-info">
                     <span className="method-name">Bank Transfer (NEFT/IMPS)</span>
-                    <span className="method-sub">Account no., IFSC & holder name</span>
+                    <span className="method-sub">{bankLabel}</span>
                   </div>
                   <Building2 size={16} className="text-gold" />
                 </label>
@@ -212,29 +221,31 @@ export default function PayoutModal({
                     value="upi" 
                     checked={method === 'upi'} 
                     onChange={() => setMethod('upi')}
+                    disabled={!hasUpi}
                   />
                   <div className="method-info">
                     <span className="method-name">Instant UPI</span>
-                    <span className="method-sub">Your UPI ID</span>
+                    <span className="method-sub">{hasUpi ? bankDetails.upi_id : 'Add UPI ID on the Payouts page'}</span>
                   </div>
                   <Smartphone size={16} className="text-gold" />
                 </label>
               </div>
             </div>
 
-            {/* Destination details */}
+            {/* Saved payout account */}
             <div className="form-group-item mt-3">
-              <label className="settings-field-label">
-                {method === 'upi' ? 'UPI ID' : 'Bank Account Details'}
-              </label>
-              <input
-                type="text"
-                value={accountDetails}
-                onChange={(e) => setAccountDetails(e.target.value)}
-                className="simple-text-input"
-                placeholder={method === 'upi' ? 'yourname@upi' : 'A/C 1234567890, IFSC HDFC0001234, Name'}
-                maxLength={255}
-              />
+              {(!hasBank && !hasUpi) ? (
+                <div className="balance-notice-text" style={{ color: '#B45309' }}>
+                  Add your bank account or UPI ID before requesting a payout.{' '}
+                  {onAddBankDetails && (
+                    <button type="button" className="max-pill-btn" onClick={onAddBankDetails}>Add payout account</button>
+                  )}
+                </div>
+              ) : (
+                <span className="balance-notice-text">
+                  Paid to your saved {method === 'upi' ? 'UPI ID' : 'bank account'}: <strong>{destinationLabel}</strong>
+                </span>
+              )}
               <span className="balance-notice-text mt-2">
                 Minimum withdrawal: {formatCurrency(minPayout, currency)}
               </span>
