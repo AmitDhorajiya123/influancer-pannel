@@ -8,10 +8,12 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     proxy: {
+      // Local dev: forward /api/* to the LIVE backend (https://shivimanufacturer.com/api/*)
+      // so no local Laravel setup is needed and there are no CORS issues.
       '/api': {
-        target: 'http://localhost/shivimanufacturer/public/index.php',
+        target: 'https://shivimanufacturer.com',
         changeOrigin: true,
-        secure: false,
+        secure: true,
       }
     }
   }
