@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Copy, Check, MessageCircle, ExternalLink, Sparkles, QrCode } from 'lucide-react';
+import { ArrowLeft, Copy, Check, ExternalLink, Sparkles, QrCode } from 'lucide-react';
+import WhatsAppIcon from '../WhatsAppIcon';
 import { INFLUENCER_PROFILE } from '../../data/mockData';
 
 export default function ReferralLinksView({ onBackToDashboard, showToast, commissionRate = 25, currentUser }) {
@@ -113,8 +114,7 @@ export default function ReferralLinksView({ onBackToDashboard, showToast, commis
             className="whatsapp-share-button"
             onClick={handleWhatsAppShare}
           >
-            <MessageCircle size={15} />
-            <span>Share on WhatsApp Now</span>
+            <WhatsAppIcon size={16} />
           </button>
         </div>
       </div>

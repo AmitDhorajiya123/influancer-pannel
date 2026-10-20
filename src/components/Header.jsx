@@ -60,16 +60,6 @@ export default function Header({
       </div>
 
       <div className="header-right-actions">
-        {/* Quick Request Payout */}
-        <button 
-          className="header-payout-cta"
-          onClick={onRequestPayout}
-          id="header-withdraw-btn"
-        >
-          <Zap size={14} />
-          <span>Request Payout</span>
-        </button>
-
         {/* Influencer Profile / Logout */}
         <div className="header-profile-wrap">
           <div 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Copy, Check, Share2, Sparkles, MessageCircle, ExternalLink } from 'lucide-react';
+import { Copy, Check, Share2, Sparkles, ExternalLink } from 'lucide-react';
+import WhatsAppIcon from './WhatsAppIcon';
 import { INFLUENCER_PROFILE } from '../data/mockData';
 
 export default function ReferralShareCard({ showToast, commissionRate = 25, currentUser }) {
@@ -39,9 +40,6 @@ export default function ReferralShareCard({ showToast, commissionRate = 25, curr
             <span>YOUR EXCLUSIVE REFERRAL DETAILS</span>
           </div>
           <h2 className="share-card-title">Share & Earn Commission</h2>
-          <p className="share-card-desc">
-            Your followers receive <strong>25% OFF</strong> on Shivi Manufacturer apparel. You earn an instant <strong>{commissionRate}% commission</strong> on every order completed.
-          </p>
         </div>
 
         <button 
@@ -49,8 +47,7 @@ export default function ReferralShareCard({ showToast, commissionRate = 25, curr
           onClick={handleWhatsAppShare}
           id="share-whatsapp-btn"
         >
-          <MessageCircle size={15} />
-          <span>Share on WhatsApp</span>
+          <WhatsAppIcon size={16} />
         </button>
       </div>
 
