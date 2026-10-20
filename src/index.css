@@ -1,0 +1,184 @@
+/* Modern Light Luxury Design System for Shivi Manufacturer Influencer Portal */
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+
+  /* Shivi Manufacturer Signature Logo Color Palette */
+  /* Logo Monogram: Deep Bronze Mocha #59331D & Rich Cognac #8C5332 & Taupe #86776E */
+  --bg-app: #FAF7F4;
+  --bg-sidebar: #FFFFFF;
+  --bg-header: rgba(255, 255, 255, 0.94);
+  --bg-card: #FFFFFF;
+  --bg-card-subtle: #F5EFEB;
+  --bg-card-well: #EFE7E1;
+  --bg-card-hover: #F8F3EE;
+
+  /* Logo-toned Borders */
+  --border-subtle: #E8DFD7;
+  --border-light: #D9CCC1;
+  --border-gold: rgba(89, 51, 29, 0.28);
+  --border-gold-glow: rgba(140, 83, 50, 0.45);
+
+  /* Logo Monogram Rich Bronze Accents */
+  --gold-primary: #59331D;
+  --gold-light: #8C5332;
+  --gold-dark: #3F2212;
+  --gold-gradient: linear-gradient(135deg, #59331D 0%, #8C5332 100%);
+  --gold-gradient-hover: linear-gradient(135deg, #462513 0%, #764426 100%);
+  --gold-badge-bg: rgba(89, 51, 29, 0.08);
+
+  /* Secondary Accents */
+  --green-accent: #15803D;
+  --green-light: #16A34A;
+  --green-badge-bg: rgba(21, 128, 61, 0.1);
+  --green-border: rgba(21, 128, 61, 0.25);
+
+  --purple-accent: #7C3AED;
+  --purple-badge-bg: rgba(124, 58, 237, 0.09);
+
+  /* High Luxury Warm Espresso Typography */
+  --text-primary: #241A15;
+  --text-secondary: #5C4C42;
+  --text-muted: #86776E;
+  --text-on-gold: #FFFFFF;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Shadows with warm bronze undertone */
+  --shadow-card: 0 1px 3px rgba(89, 51, 29, 0.05), 0 10px 20px -3px rgba(89, 51, 29, 0.06);
+  --shadow-subtle: 0 1px 2px 0 rgba(89, 51, 29, 0.04);
+  --shadow-gold-glow: 0 4px 14px rgba(89, 51, 29, 0.22);
+  --shadow-button-glow: 0 2px 10px rgba(89, 51, 29, 0.22);
+}
+
+/* Dark Mode (Deep Obsidian Espresso with Warm Logo Bronze) */
+.dark-theme {
+  --bg-app: #130F0D;
+  --bg-sidebar: #191411;
+  --bg-header: rgba(19, 15, 13, 0.92);
+  --bg-card: #1F1916;
+  --bg-card-subtle: #27201B;
+  --bg-card-well: #1A1411;
+  --bg-card-hover: #2E251F;
+
+  --border-subtle: rgba(235, 216, 205, 0.09);
+  --border-light: rgba(235, 216, 205, 0.16);
+  --border-gold: rgba(200, 132, 86, 0.35);
+  --border-gold-glow: rgba(200, 132, 86, 0.55);
+
+  --gold-primary: #C88456;
+  --gold-light: #E0A985;
+  --gold-dark: #9E6038;
+  --gold-gradient: linear-gradient(135deg, #C88456 0%, #8C5332 100%);
+  --gold-gradient-hover: linear-gradient(135deg, #DF9D72 0%, #9C5E3A 100%);
+  --gold-badge-bg: rgba(200, 132, 86, 0.16);
+
+  --green-accent: #22C55E;
+  --green-light: #4ADE80;
+  --green-badge-bg: rgba(34, 197, 94, 0.15);
+  --green-border: rgba(34, 197, 94, 0.3);
+
+  --text-primary: #FAF7F5;
+  --text-secondary: #C4B7AF;
+  --text-muted: #8E827A;
+  --text-on-gold: #FFFFFF;
+
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body {
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(217, 119, 6, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(16, 185, 129, 0.03) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-primary);
+}
+
+/* Utilities */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--green-accent);
+  display: inline-block;
+  box-shadow: 0 0 8px var(--green-accent);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+.gold-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--gold-primary);
+  display: inline-block;
+  box-shadow: 0 0 8px var(--gold-primary);
+}
