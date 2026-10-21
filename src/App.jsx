@@ -28,6 +28,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import LoginPage from './components/LoginPage';
 import PayoutModal from './components/PayoutModal';
+import FullScreenLoader from './components/FullScreenLoader';
 
 // Dashboard View Components
 import ReferralShareCard from './components/ReferralShareCard';
@@ -77,10 +78,11 @@ export default function App() {
   const [recentOrders, setRecentOrders] = useState(REFERRAL_ORDERS);
   const [payouts, setPayouts] = useState(INITIAL_PAYOUTS);
   const [bankDetails, setBankDetails] = useState(null);
+  const [portalLoading, setPortalLoading] = useState(true);
   const [customers, setCustomers] = useState([]);
   const [customersLoading, setCustomersLoading] = useState(false);
   const [customersPage, setCustomersPage] = useState(1);
-  const [customersPerPage] = useState(10);
+  const [customersPerPage, setCustomersPerPage] = useState(10);
   const [customersTotal, setCustomersTotal] = useState(0);
   const [customersLastPage, setCustomersLastPage] = useState(1);
   const [customersSearch, setCustomersSearch] = useState('');
@@ -136,10 +138,11 @@ export default function App() {
   const loadCustomers = useCallback(async (page = 1, overrides = {}) => {
     const search = overrides.search ?? customersSearch;
     const status = overrides.status ?? customersStatus;
+    const perPage = overrides.perPage ?? customersPerPage;
     setCustomersLoading(true);
     const mapped = await fetchMappedUsers({
       page,
-      per_page: customersPerPage,
+      per_page: perPage,
       search: search || undefined,
       status: status === 'ALL' ? undefined : status.toLowerCase()
     });
@@ -171,10 +174,17 @@ export default function App() {
     loadCustomers(1, { status: value });
   };
 
+  const handleCustomersPerPageChange = (value) => {
+    setCustomersPerPage(value);
+    loadCustomers(1, { perPage: value });
+  };
+
   // Load all live data from the backend
   const loadPortalData = useCallback(async () => {
+    setPortalLoading(true);
     const [dash, ord, pay] = await Promise.all([fetchDashboard(), fetchOrders(), fetchPayouts()]);
-    loadCustomers(1);
+    await loadCustomers(1);
+    setPortalLoading(false);
 
     const failed = [dash, ord, pay].find(r => r && (r.unauthorized || r.status === false));
     if (failed?.unauthorized) {
@@ -317,6 +327,10 @@ export default function App() {
         </div>
       )}
 
+      {isAuthenticated && !portalLoading && customersLoading && (
+        <FullScreenLoader label="Loading customers..." />
+      )}
+
       <Routes>
         {/* Public Login Route with /influancer prefix */}
         <Route 
@@ -341,6 +355,8 @@ export default function App() {
           element={
             !isAuthenticated ? (
               <Navigate to="/influancer/login" replace />
+            ) : portalLoading ? (
+              <FullScreenLoader label="Loading your portal..." />
             ) : (
               <div className={`app-layout-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
                 {/* Sidebar */}
@@ -398,6 +414,7 @@ export default function App() {
                             onSearchChange={handleCustomersSearchChange}
                             statusFilter={customersStatus}
                             onStatusChange={handleCustomersStatusChange}
+                            onPerPageChange={handleCustomersPerPageChange}
                           />
                         } 
                       />

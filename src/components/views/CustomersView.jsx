@@ -22,7 +22,8 @@ export default function CustomersView({
   searchTerm = '',
   onSearchChange,
   statusFilter = 'ALL',
-  onStatusChange
+  onStatusChange,
+  onPerPageChange
 }) {
   const [searchInput, setSearchInput] = useState(searchTerm);
 
@@ -54,8 +55,9 @@ export default function CustomersView({
     if (showToast) showToast('Customers CSV exported.', 'success');
   };
 
-  const rangeStart = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const rangeEnd = Math.min(page * perPage, total);
+  const isAllPerPage = perPage === 'all';
+  const rangeStart = total === 0 ? 0 : isAllPerPage ? 1 : (page - 1) * perPage + 1;
+  const rangeEnd = isAllPerPage ? total : Math.min(page * perPage, total);
 
   return (
     <div className="view-page-container animate-fade-in">
@@ -139,6 +141,24 @@ export default function CustomersView({
               </button>
             ))}
           </div>
+
+          <div className="per-page-select-wrap">
+            <label htmlFor="customers-per-page">Show</label>
+            <select
+              id="customers-per-page"
+              className="per-page-select"
+              value={String(perPage)}
+              onChange={(e) => {
+                const value = e.target.value === 'all' ? 'all' : Number(e.target.value);
+                onPerPageChange?.(value);
+              }}
+            >
+              {[10, 25, 50, 100].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+              <option value="all">All</option>
+            </select>
+          </div>
         </div>
 
         <div className="table-responsive-container">
@@ -155,13 +175,7 @@ export default function CustomersView({
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="empty-table-cell">
-                    <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading customers...</div>
-                  </td>
-                </tr>
-              ) : customers.length === 0 ? (
+              {!loading && customers.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="empty-table-cell">
                     <div style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>
@@ -220,25 +234,27 @@ export default function CustomersView({
             <div className="pagination-count-text">
               Showing <strong>{rangeStart}-{rangeEnd}</strong> of <strong>{total}</strong> mapped customers
             </div>
-            <div className="pagination-buttons-row">
-              <button
-                className="pagination-btn"
-                disabled={page <= 1 || loading}
-                onClick={() => onPageChange?.(page - 1)}
-              >
-                <ChevronLeft size={14} />
-                <span>Previous</span>
-              </button>
-              <span className="pagination-count-text">Page {page} of {lastPage}</span>
-              <button
-                className="pagination-btn"
-                disabled={page >= lastPage || loading}
-                onClick={() => onPageChange?.(page + 1)}
-              >
-                <span>Next</span>
-                <ChevronRight size={14} />
-              </button>
-            </div>
+            {!isAllPerPage && (
+              <div className="pagination-buttons-row">
+                <button
+                  className="pagination-btn"
+                  disabled={page <= 1 || loading}
+                  onClick={() => onPageChange?.(page - 1)}
+                >
+                  <ChevronLeft size={14} />
+                  <span>Previous</span>
+                </button>
+                <span className="pagination-count-text">Page {page} of {lastPage}</span>
+                <button
+                  className="pagination-btn"
+                  disabled={page >= lastPage || loading}
+                  onClick={() => onPageChange?.(page + 1)}
+                >
+                  <span>Next</span>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
