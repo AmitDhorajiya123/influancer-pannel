@@ -247,9 +247,9 @@ export function fetchOrders(params = {}) {
   return authedRequest('/v1/influencer/orders', { query: params });
 }
 
-/** GET /api/v1/influencer/mapped-users -> { users, total } */
-export function fetchMappedUsers() {
-  return authedRequest('/v1/influencer/mapped-users');
+/** GET /api/v1/influencer/mapped-users -> { users, total, page, per_page, last_page, summary } */
+export function fetchMappedUsers(params = {}) {
+  return authedRequest('/v1/influencer/mapped-users', { query: params });
 }
 
 /** GET /api/v1/influencer/payouts -> { payouts, available_balance, min_payout } */

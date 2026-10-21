@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Users, UserCheck, ShoppingBag, Download } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Search, Users, UserCheck, ShoppingBag, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 /**
  * Customers who registered with this influencer's referral code.
- * Data: GET /api/v1/influencer/mapped-users
+ * Data: GET /api/v1/influencer/mapped-users (paginated, filtered server-side)
  */
 export default function CustomersView({
   customers = [],
@@ -12,43 +12,50 @@ export default function CustomersView({
   referralCode,
   loading = false,
   onBackToDashboard,
-  showToast
+  showToast,
+  summary = { total_customers: 0, active_customers: 0, total_spend: 0, total_commission: 0 },
+  page = 1,
+  perPage = 10,
+  total = 0,
+  lastPage = 1,
+  onPageChange,
+  searchTerm = '',
+  onSearchChange,
+  statusFilter = 'ALL',
+  onStatusChange
 }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchInput, setSearchInput] = useState(searchTerm);
 
-  const filtered = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    return customers.filter((c) => {
-      const matchesSearch = !q
-        || String(c.name || '').toLowerCase().includes(q)
-        || String(c.firm_name || '').toLowerCase().includes(q)
-        || String(c.mobile || '').toLowerCase().includes(q);
-      const matchesStatus = statusFilter === 'ALL' || String(c.status).toUpperCase() === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [customers, searchTerm, statusFilter]);
+  useEffect(() => {
+    setSearchInput(searchTerm);
+  }, [searchTerm]);
 
-  const activeCount = customers.filter((c) => c.status === 'Active').length;
-  const totalSpend = customers.reduce((sum, c) => sum + Number(c.userSpend || 0), 0);
-  const totalCommission = customers.reduce((sum, c) => sum + Number(c.commission || 0), 0);
+  useEffect(() => {
+    if (searchInput === searchTerm) return;
+    const timer = setTimeout(() => onSearchChange?.(searchInput), 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   const handleExport = () => {
     const safe = (v) => String(v ?? '').replace(/"/g, '""');
     const rows = [
       'Customer,Firm,Mobile,Joined,Orders,Spend,Commission,Earned,Status',
-      ...filtered.map((c) =>
+      ...customers.map((c) =>
         `"${safe(c.name)}","${safe(c.firm_name)}","${safe(c.mobile)}","${safe(c.mappedDate)}",${c.ordersCount},${c.userSpend},${c.commission},${c.earnedCommission},"${safe(c.status)}"`
       )
     ];
     const link = document.createElement('a');
     link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join('\n'));
-    link.download = `shivi_mapped_customers_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `shivi_mapped_customers_page${page}_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     if (showToast) showToast('Customers CSV exported.', 'success');
   };
+
+  const rangeStart = total === 0 ? 0 : (page - 1) * perPage + 1;
+  const rangeEnd = Math.min(page * perPage, total);
 
   return (
     <div className="view-page-container animate-fade-in">
@@ -65,7 +72,7 @@ export default function CustomersView({
             <ArrowLeft size={15} />
             <span>Back to Dashboard</span>
           </button>
-          <button className="export-csv-action-btn" onClick={handleExport} disabled={!filtered.length}>
+          <button className="export-csv-action-btn" onClick={handleExport} disabled={!customers.length}>
             <Download size={15} />
             <span>Export CSV</span>
           </button>
@@ -79,7 +86,7 @@ export default function CustomersView({
             <span className="metric-tag-label">MAPPED CUSTOMERS</span>
             <div className="metric-icon-bubble purple-bubble"><Users size={16} /></div>
           </div>
-          <div className="metric-main-value tabular-nums">{customers.length}</div>
+          <div className="metric-main-value tabular-nums">{summary.total_customers}</div>
           <span className="metric-footer-note">Registered with your code</span>
         </div>
         <div className="simple-metric-card">
@@ -87,7 +94,7 @@ export default function CustomersView({
             <span className="metric-tag-label">ACTIVE BUYERS</span>
             <div className="metric-icon-bubble green-bubble"><UserCheck size={16} /></div>
           </div>
-          <div className="metric-main-value tabular-nums">{activeCount}</div>
+          <div className="metric-main-value tabular-nums">{summary.active_customers}</div>
           <span className="metric-footer-note">Placed at least one order</span>
         </div>
         <div className="simple-metric-card">
@@ -95,7 +102,7 @@ export default function CustomersView({
             <span className="metric-tag-label">TOTAL SPEND</span>
             <div className="metric-icon-bubble blue-bubble"><ShoppingBag size={16} /></div>
           </div>
-          <div className="metric-main-value tabular-nums">{formatCurrency(totalSpend, currency)}</div>
+          <div className="metric-main-value tabular-nums">{formatCurrency(summary.total_spend, currency)}</div>
           <span className="metric-footer-note">Excluding cancelled orders</span>
         </div>
         <div className="simple-metric-card">
@@ -103,7 +110,7 @@ export default function CustomersView({
             <span className="metric-tag-label">COMMISSION</span>
             <div className="metric-icon-bubble gold-bubble"><ShoppingBag size={16} /></div>
           </div>
-          <div className="metric-main-value text-gold tabular-nums">{formatCurrency(totalCommission, currency)}</div>
+          <div className="metric-main-value text-gold tabular-nums">{formatCurrency(summary.total_commission, currency)}</div>
           <span className="metric-footer-note">Earned + pending</span>
         </div>
       </div>
@@ -115,8 +122,8 @@ export default function CustomersView({
             <input
               type="text"
               placeholder="Search by name, firm or mobile..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="table-search-input"
             />
           </div>
@@ -126,7 +133,7 @@ export default function CustomersView({
               <button
                 key={s}
                 className={`filter-pill-btn ${statusFilter === s ? 'active' : ''}`}
-                onClick={() => setStatusFilter(s)}
+                onClick={() => onStatusChange?.(s)}
               >
                 {s}
               </button>
@@ -154,7 +161,7 @@ export default function CustomersView({
                     <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading customers...</div>
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : customers.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="empty-table-cell">
                     <div style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>
@@ -168,7 +175,7 @@ export default function CustomersView({
                   </td>
                 </tr>
               ) : (
-                filtered.map((c) => (
+                customers.map((c) => (
                   <tr key={c.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -207,6 +214,33 @@ export default function CustomersView({
             </tbody>
           </table>
         </div>
+
+        {total > 0 && (
+          <div className="table-pagination-footer">
+            <div className="pagination-count-text">
+              Showing <strong>{rangeStart}-{rangeEnd}</strong> of <strong>{total}</strong> mapped customers
+            </div>
+            <div className="pagination-buttons-row">
+              <button
+                className="pagination-btn"
+                disabled={page <= 1 || loading}
+                onClick={() => onPageChange?.(page - 1)}
+              >
+                <ChevronLeft size={14} />
+                <span>Previous</span>
+              </button>
+              <span className="pagination-count-text">Page {page} of {lastPage}</span>
+              <button
+                className="pagination-btn"
+                disabled={page >= lastPage || loading}
+                onClick={() => onPageChange?.(page + 1)}
+              >
+                <span>Next</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

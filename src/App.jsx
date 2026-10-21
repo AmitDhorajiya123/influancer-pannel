@@ -79,6 +79,18 @@ export default function App() {
   const [bankDetails, setBankDetails] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [customersLoading, setCustomersLoading] = useState(false);
+  const [customersPage, setCustomersPage] = useState(1);
+  const [customersPerPage] = useState(10);
+  const [customersTotal, setCustomersTotal] = useState(0);
+  const [customersLastPage, setCustomersLastPage] = useState(1);
+  const [customersSearch, setCustomersSearch] = useState('');
+  const [customersStatus, setCustomersStatus] = useState('ALL');
+  const [customersSummary, setCustomersSummary] = useState({
+    total_customers: 0,
+    active_customers: 0,
+    total_spend: 0,
+    total_commission: 0
+  });
 
   // Modal & Toast State
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
@@ -112,17 +124,57 @@ export default function App() {
     setRecentOrders([]);
     setPayouts([]);
     setCustomers([]);
+    setCustomersPage(1);
+    setCustomersTotal(0);
+    setCustomersLastPage(1);
     if (message) showToast(message, 'error');
     navigate('/influancer/login', { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
+  // Fetch a page of mapped customers (search/status filtered server-side).
+  const loadCustomers = useCallback(async (page = 1, overrides = {}) => {
+    const search = overrides.search ?? customersSearch;
+    const status = overrides.status ?? customersStatus;
+    setCustomersLoading(true);
+    const mapped = await fetchMappedUsers({
+      page,
+      per_page: customersPerPage,
+      search: search || undefined,
+      status: status === 'ALL' ? undefined : status.toLowerCase()
+    });
+    setCustomersLoading(false);
+
+    if (mapped?.unauthorized) {
+      forceLogout(mapped.message);
+      return;
+    }
+    if (mapped?.status) {
+      setCustomers(mapped.users || []);
+      setCustomersPage(mapped.page || page);
+      setCustomersTotal(mapped.total || 0);
+      setCustomersLastPage(mapped.last_page || 1);
+      if (mapped.summary) setCustomersSummary(mapped.summary);
+    } else if (mapped?.message) {
+      showToast(mapped.message, 'error');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customersPerPage, customersSearch, customersStatus, forceLogout]);
+
+  const handleCustomersSearchChange = (value) => {
+    setCustomersSearch(value);
+    loadCustomers(1, { search: value });
+  };
+
+  const handleCustomersStatusChange = (value) => {
+    setCustomersStatus(value);
+    loadCustomers(1, { status: value });
+  };
+
   // Load all live data from the backend
   const loadPortalData = useCallback(async () => {
-    setCustomersLoading(true);
-    const [dash, ord, pay, mapped] = await Promise.all([fetchDashboard(), fetchOrders(), fetchPayouts(), fetchMappedUsers()]);
-    setCustomersLoading(false);
-    if (mapped?.status) setCustomers(mapped.users || []);
+    const [dash, ord, pay] = await Promise.all([fetchDashboard(), fetchOrders(), fetchPayouts()]);
+    loadCustomers(1);
 
     const failed = [dash, ord, pay].find(r => r && (r.unauthorized || r.status === false));
     if (failed?.unauthorized) {
@@ -152,7 +204,8 @@ export default function App() {
     if (failed && !failed.unauthorized) {
       showToast(failed.message || 'Unable to load portal data.', 'error');
     }
-  }, [forceLogout]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceLogout, loadCustomers]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -328,13 +381,23 @@ export default function App() {
                       <Route 
                         path="customers" 
                         element={
-                          <CustomersView 
+                          <CustomersView
                             customers={customers}
                             currency={currency}
                             referralCode={currentUser?.referral_code}
                             loading={customersLoading}
                             onBackToDashboard={() => navigate('/influancer/dashboard')}
                             showToast={showToast}
+                            summary={customersSummary}
+                            page={customersPage}
+                            perPage={customersPerPage}
+                            total={customersTotal}
+                            lastPage={customersLastPage}
+                            onPageChange={(page) => loadCustomers(page)}
+                            searchTerm={customersSearch}
+                            onSearchChange={handleCustomersSearchChange}
+                            statusFilter={customersStatus}
+                            onStatusChange={handleCustomersStatusChange}
                           />
                         } 
                       />
