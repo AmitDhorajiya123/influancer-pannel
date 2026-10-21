@@ -28,7 +28,6 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import LoginPage from './components/LoginPage';
 import PayoutModal from './components/PayoutModal';
-import FullScreenLoader from './components/FullScreenLoader';
 
 // Dashboard View Components
 import ReferralShareCard from './components/ReferralShareCard';
@@ -54,7 +53,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(Boolean(savedUser && savedToken));
   const [currency] = useState('INR');
   const [commissionRate, setCommissionRate] = useState(savedUser?.commission_rate ?? 0);
-  const [minPayout, setMinPayout] = useState(500);
+  const [minPayout, setMinPayout] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try {
@@ -195,7 +194,7 @@ export default function App() {
     if (dash?.status) {
       setMetrics(prev => ({ ...prev, ...dash.metrics }));
       setCommissionRate(dash.metrics?.commissionRate ?? 0);
-      setMinPayout(dash.metrics?.minPayout ?? 500);
+      setMinPayout(dash.metrics?.minPayout ?? 1);
       setRecentOrders(dash.recent_orders || []);
       if (dash.profile) {
         setCurrentUser(prev => {
@@ -301,19 +300,21 @@ export default function App() {
       />
 
       {/* 2. Core Metrics (4 Cards) */}
-      <MetricCards 
+      <MetricCards
         metrics={metrics}
         currency={currency}
         onWithdrawNow={() => setPayoutModalOpen(true)}
         commissionRate={commissionRate}
+        loading={portalLoading}
       />
 
       {/* 3. Recent Referral Orders Table */}
-      <RecentOrdersTable 
+      <RecentOrdersTable
         orders={recentOrders}
         currency={currency}
         onViewAllOrders={() => navigate('/influancer/orders')}
         commissionRate={commissionRate}
+        loading={portalLoading}
       />
     </div>
   );
@@ -325,10 +326,6 @@ export default function App() {
         <div className={`toast-banner toast-${toast.type} animate-slide-down`}>
           <span>{toast.message}</span>
         </div>
-      )}
-
-      {isAuthenticated && !portalLoading && customersLoading && (
-        <FullScreenLoader label="Loading customers..." />
       )}
 
       <Routes>
@@ -355,8 +352,6 @@ export default function App() {
           element={
             !isAuthenticated ? (
               <Navigate to="/influancer/login" replace />
-            ) : portalLoading ? (
-              <FullScreenLoader label="Loading your portal..." />
             ) : (
               <div className={`app-layout-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
                 {/* Sidebar */}
@@ -421,19 +416,20 @@ export default function App() {
                       <Route 
                         path="orders" 
                         element={
-                          <OrdersView 
+                          <OrdersView
                             orders={orders}
                             currency={currency}
                             onBackToDashboard={() => navigate('/influancer/dashboard')}
                             onExportCSV={handleExportCSV}
                             commissionRate={commissionRate}
+                            loading={portalLoading}
                           />
                         } 
                       />
                       <Route 
                         path="payouts" 
                         element={
-                          <PayoutsView 
+                          <PayoutsView
                             currency={currency}
                             availableBalance={metrics.availablePayout}
                             minPayout={minPayout}
@@ -442,6 +438,7 @@ export default function App() {
                             onSaveBankDetails={handleSaveBankDetails}
                             onRequestPayout={() => setPayoutModalOpen(true)}
                             onBackToDashboard={() => navigate('/influancer/dashboard')}
+                            loading={portalLoading}
                           />
                         } 
                       />

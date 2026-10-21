@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Search, ArrowRight, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
+import TableSkeletonRows from './TableSkeletonRows';
 
-export default function RecentOrdersTable({ 
-  orders, 
-  currency, 
+export default function RecentOrdersTable({
+  orders,
+  currency,
   onViewAllOrders,
-  commissionRate = 25 
+  commissionRate = 25,
+  loading = false
 }) {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -99,7 +101,9 @@ export default function RecentOrdersTable({
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length === 0 ? (
+            {loading ? (
+              <TableSkeletonRows columns={7} rows={5} />
+            ) : filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan="7" className="empty-table-cell">
                   <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>

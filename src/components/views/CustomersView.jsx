@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Search, Users, UserCheck, ShoppingBag, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
+import TableSkeletonRows from '../TableSkeletonRows';
 
 /**
  * Customers who registered with this influencer's referral code.
@@ -33,7 +34,7 @@ export default function CustomersView({
 
   useEffect(() => {
     if (searchInput === searchTerm) return;
-    const timer = setTimeout(() => onSearchChange?.(searchInput), 400);
+    const timer = setTimeout(() => onSearchChange?.(searchInput), 1000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
@@ -119,29 +120,6 @@ export default function CustomersView({
 
       <div className="orders-section-card mt-6">
         <div className="table-toolbar-row">
-          <div className="table-search-input-wrap">
-            <Search size={14} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search by name, firm or mobile..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="table-search-input"
-            />
-          </div>
-
-          <div className="status-filter-pills">
-            {['ALL', 'ACTIVE', 'INACTIVE'].map((s) => (
-              <button
-                key={s}
-                className={`filter-pill-btn ${statusFilter === s ? 'active' : ''}`}
-                onClick={() => onStatusChange?.(s)}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
           <div className="per-page-select-wrap">
             <label htmlFor="customers-per-page">Show</label>
             <select
@@ -159,6 +137,29 @@ export default function CustomersView({
               <option value="all">All</option>
             </select>
           </div>
+
+          <div className="status-filter-pills">
+            {['ALL', 'ACTIVE', 'INACTIVE'].map((s) => (
+              <button
+                key={s}
+                className={`filter-pill-btn ${statusFilter === s ? 'active' : ''}`}
+                onClick={() => onStatusChange?.(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          <div className="table-search-input-wrap">
+            <Search size={14} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search by name, firm or mobile..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="table-search-input"
+            />
+          </div>
         </div>
 
         <div className="table-responsive-container">
@@ -175,7 +176,9 @@ export default function CustomersView({
               </tr>
             </thead>
             <tbody>
-              {!loading && customers.length === 0 ? (
+              {loading ? (
+                <TableSkeletonRows columns={7} rows={isAllPerPage ? Math.min(customers.length || 8, 8) : Math.min(perPage, 8)} />
+              ) : customers.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="empty-table-cell">
                     <div style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>

@@ -17,7 +17,7 @@ export default function PayoutModal({
   availableBalance, 
   currency, 
   onSubmitPayout,
-  minPayout = 500,
+  minPayout = 1,
   bankDetails = null,
   onAddBankDetails
 }) {

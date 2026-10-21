@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Search, Download, Filter } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
+import TableSkeletonRows from '../TableSkeletonRows';
 
-export default function OrdersView({ 
-  orders, 
-  currency, 
-  onBackToDashboard, 
+export default function OrdersView({
+  orders,
+  currency,
+  onBackToDashboard,
   onExportCSV,
-  commissionRate = 25 
+  commissionRate = 25,
+  loading = false
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -119,7 +121,9 @@ export default function OrdersView({
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.length === 0 ? (
+              {loading ? (
+                <TableSkeletonRows columns={7} rows={8} />
+              ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="empty-table-cell">
                     <div style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>

@@ -2,11 +2,12 @@ import React from 'react';
 import { Coins, Wallet, ShoppingBag, Percent, ArrowUpRight } from 'lucide-react';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 
-export default function MetricCards({ 
-  metrics, 
-  currency, 
+export default function MetricCards({
+  metrics,
+  currency,
   onWithdrawNow,
-  commissionRate = 25
+  commissionRate = 25,
+  loading = false
 }) {
   return (
     <div className="simple-metric-cards-grid">
@@ -18,9 +19,13 @@ export default function MetricCards({
             <Coins size={16} />
           </div>
         </div>
-        <div className="metric-main-value tabular-nums">
-          {formatCurrency(metrics.totalEarnings, currency)}
-        </div>
+        {loading ? (
+          <span className="shimmer-bar shimmer-bar--lg" />
+        ) : (
+          <div className="metric-main-value tabular-nums">
+            {formatCurrency(metrics.totalEarnings, currency)}
+          </div>
+        )}
         <span className="metric-footer-note">Lifetime commission earned</span>
       </div>
 
@@ -33,10 +38,14 @@ export default function MetricCards({
           </div>
         </div>
         <div className="metric-value-action-row">
-          <div className="metric-main-value text-gold tabular-nums">
-            {formatCurrency(metrics.availablePayout, currency)}
-          </div>
-          <button 
+          {loading ? (
+            <span className="shimmer-bar shimmer-bar--lg" />
+          ) : (
+            <div className="metric-main-value text-gold tabular-nums">
+              {formatCurrency(metrics.availablePayout, currency)}
+            </div>
+          )}
+          <button
             className="withdraw-action-pill"
             onClick={onWithdrawNow}
             id="metric-withdraw-cta"
@@ -55,9 +64,13 @@ export default function MetricCards({
             <ShoppingBag size={16} />
           </div>
         </div>
-        <div className="metric-main-value tabular-nums">
-          {formatNumber(metrics.totalOrders)}
-        </div>
+        {loading ? (
+          <span className="shimmer-bar shimmer-bar--lg" />
+        ) : (
+          <div className="metric-main-value tabular-nums">
+            {formatNumber(metrics.totalOrders)}
+          </div>
+        )}
         <span className="metric-footer-note">Purchases via your code / link</span>
       </div>
 
@@ -69,9 +82,13 @@ export default function MetricCards({
             <Percent size={16} />
           </div>
         </div>
-        <div className="metric-main-value tabular-nums">
-          {commissionRate}%
-        </div>
+        {loading ? (
+          <span className="shimmer-bar shimmer-bar--lg" />
+        ) : (
+          <div className="metric-main-value tabular-nums">
+            {commissionRate}%
+          </div>
+        )}
         <span className="metric-footer-note">Earned on all customer orders</span>
       </div>
     </div>

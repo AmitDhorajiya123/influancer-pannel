@@ -1,18 +1,20 @@
 import React from 'react';
 import { ArrowLeft, Wallet, Zap } from 'lucide-react';
 import BankDetailsCard from '../BankDetailsCard';
+import TableSkeletonRows from '../TableSkeletonRows';
 import { formatCurrency } from '../../utils/formatters';
 import { INITIAL_PAYOUTS } from '../../data/mockData';
 
-export default function PayoutsView({ 
-  currency, 
-  availableBalance, 
-  payouts = INITIAL_PAYOUTS, 
-  onRequestPayout, 
+export default function PayoutsView({
+  currency,
+  availableBalance,
+  payouts = INITIAL_PAYOUTS,
+  onRequestPayout,
   onBackToDashboard,
-  minPayout = 500,
+  minPayout = 1,
   bankDetails = null,
-  onSaveBankDetails
+  onSaveBankDetails,
+  loading = false
 }) {
   const statusPill = (status) => {
     const map = {
@@ -60,9 +62,13 @@ export default function PayoutsView({
             <span className="summary-card-label">AVAILABLE FOR WITHDRAWAL</span>
             <Wallet size={18} className="text-gold" />
           </div>
-          <div className="summary-balance-number tabular-nums">
-            {formatCurrency(availableBalance, currency)}
-          </div>
+          {loading ? (
+            <span className="shimmer-bar shimmer-bar--lg" />
+          ) : (
+            <div className="summary-balance-number tabular-nums">
+              {formatCurrency(availableBalance, currency)}
+            </div>
+          )}
           <p className="summary-sub-note">
             Minimum withdrawal: {formatCurrency(minPayout, currency)}. Paid by Shivi Manufacturer after approval.
           </p>
@@ -103,7 +109,9 @@ export default function PayoutsView({
               </tr>
             </thead>
             <tbody>
-              {payouts.length === 0 ? (
+              {loading ? (
+                <TableSkeletonRows columns={6} rows={5} />
+              ) : payouts.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="empty-table-cell">
                     <div style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>
